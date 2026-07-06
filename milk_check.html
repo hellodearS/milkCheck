@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>우유 체크</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #F3F8FF;
+    --card-bg: #FFFFFF;
+    --ink: #24344A;
+    --sub: #7A8AA0;
+    --blue: #2D6CDF;
+    --blue-light: #DCEBFF;
+    --green: #2E9E6B;
+    --green-light: #DFF5E9;
+    --gray-light: #EDEFF3;
+    --gray-border: #DDE3EC;
+    --gold: #FFC94A;
+    --white: #FFFFFF;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'Noto Sans KR', sans-serif;
+    min-height: 100vh;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap{ max-width: 1100px; margin: 0 auto; padding: 18px 18px 40px; }
+
+  /* ---------- header ---------- */
+  .header{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 14px; flex-wrap: wrap; gap: 10px;
+  }
+  .title-block{ display:flex; align-items:center; gap:12px; }
+  .milk-badge{
+    width: 52px; height:52px; border-radius: 16px;
+    background: linear-gradient(160deg, var(--blue), #4F8CFB);
+    display:flex; align-items:center; justify-content:center;
+    font-size: 28px; box-shadow: 0 4px 14px rgba(45,108,223,0.28);
+    flex-shrink:0;
+  }
+  .title-text h1{
+    font-family:'Fredoka', 'Noto Sans KR', sans-serif;
+    font-size: 26px; font-weight:700; margin:0; color: var(--ink);
+  }
+  .title-text .date{ font-size: 13px; color: var(--sub); font-weight:500; }
+  .header-actions{ display:flex; gap:8px; }
+  .icon-btn{
+    background: var(--white); border: 2px solid var(--gray-border);
+    border-radius: 12px; width: 46px; height:46px; font-size: 20px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .icon-btn:active{ transform: scale(0.94); }
+  .icon-btn:focus-visible{ outline: 3px solid var(--blue); outline-offset:2px; }
+
+  /* ---------- summary ---------- */
+  .summary{
+    display:flex; gap: 10px; flex-wrap:wrap; margin-bottom: 16px;
+  }
+  .sum-chip{
+    background: var(--card-bg); border: 2px solid var(--gray-border);
+    border-radius: 14px; padding: 10px 16px; display:flex; align-items:center; gap:8px;
+    font-weight:700; font-size: 14px;
+  }
+  .sum-chip .n{ font-family:'Fredoka', sans-serif; font-size:18px; }
+  .sum-chip.total .n{ color: var(--ink); }
+  .sum-chip.wait .n{ color: var(--sub); }
+  .sum-chip.taken .n{ color: var(--blue); }
+  .sum-chip.done .n{ color: var(--green); }
+
+  /* ---------- filter tabs ---------- */
+  .filters{ display:flex; gap: 8px; margin-bottom: 18px; flex-wrap:wrap; }
+  .filter-btn{
+    background: var(--card-bg); border: 2px solid var(--gray-border);
+    border-radius: 999px; padding: 8px 16px; font-weight:700; font-size: 13px;
+    cursor:pointer; color: var(--sub);
+  }
+  .filter-btn.active{ background: var(--ink); border-color: var(--ink); color: var(--white); }
+  .filter-btn:focus-visible{ outline: 3px solid var(--blue); outline-offset:2px; }
+
+  /* ---------- student grid ---------- */
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+    gap: 12px;
+  }
+  .card{
+    background: var(--gray-light);
+    border: 3px solid var(--gray-border);
+    border-radius: 18px;
+    padding: 16px 10px 14px;
+    text-align:center;
+    cursor:pointer;
+    user-select:none;
+    display:flex; flex-direction:column; align-items:center; gap: 8px;
+    min-height: 128px;
+    justify-content:center;
+    transition: transform .08s ease, background-color .15s ease, border-color .15s ease;
+  }
+  .card:active{ transform: scale(0.95); }
+  .card:focus-visible{ outline: 3px solid var(--blue); outline-offset: 2px; }
+  .card .icon{ font-size: 32px; line-height:1; }
+  .card .name{ font-weight: 800; font-size: 16px; word-break: keep-all; }
+  .card .status-label{ font-size: 12px; font-weight:600; }
+
+  .card.state-1{ background: var(--blue-light); border-color: var(--blue); }
+  .card.state-1 .status-label{ color: var(--blue); }
+  .card.state-2{ background: var(--green-light); border-color: var(--green); }
+  .card.state-2 .status-label{ color: var(--green); }
+  .card.state-0 .status-label{ color: var(--sub); }
+
+  .empty-state{
+    text-align:center; padding: 60px 20px; color: var(--sub);
+  }
+  .empty-state .big{ font-size: 44px; margin-bottom: 10px; }
+  .empty-state button{
+    margin-top: 16px; background: var(--blue); color:#fff; border:none;
+    border-radius: 12px; padding: 12px 22px; font-weight:700; font-size:14px; cursor:pointer;
+  }
+
+  /* ---------- modal ---------- */
+  .overlay{
+    position:fixed; inset:0; background: rgba(20,30,50,0.5);
+    display:none; align-items:center; justify-content:center; padding:16px; z-index: 50;
+  }
+  .overlay.show{ display:flex; }
+  .modal{
+    background: var(--white); border-radius: 20px; padding: 24px 22px;
+    max-width: 480px; width:100%; max-height: 88vh; overflow-y:auto;
+  }
+  .modal h2{ font-family:'Fredoka', sans-serif; font-size: 22px; margin: 0 0 6px; color: var(--ink); }
+  .modal p.hint{ font-size: 13px; color: var(--sub); margin: 0 0 14px; line-height:1.5; }
+  textarea{
+    width:100%; min-height: 220px; border-radius: 12px; border: 2px solid var(--gray-border);
+    padding: 12px; font-family:'Noto Sans KR', monospace; font-size:14px; resize:vertical;
+  }
+  textarea:focus-visible{ outline: 3px solid var(--blue); }
+  .modal-actions{ display:flex; gap: 10px; margin-top: 14px; }
+  .btn{
+    font-family:'Noto Sans KR', sans-serif; font-weight:700; font-size:15px;
+    border-radius: 12px; padding: 12px 18px; cursor:pointer; border:none; flex:1;
+  }
+  .btn-primary{ background: var(--blue); color: #fff; }
+  .btn-secondary{ background: var(--gray-light); color: var(--ink); border: 2px solid var(--gray-border); }
+  .btn-danger{ background: #FBE7E9; color:#C23B44; border: 2px solid #F3C6CA; }
+  .btn:active{ transform: scale(0.97); }
+
+  .toast{
+    position:fixed; top:20px; left:50%; transform:translateX(-50%);
+    background: var(--ink); color:#fff; padding:10px 20px; border-radius:999px;
+    font-weight:700; font-size:14px; z-index: 70; opacity:0; transition:opacity .2s ease;
+    pointer-events:none;
+  }
+  .toast.show{ opacity:1; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="header">
+    <div class="title-block">
+      <div class="milk-badge">🥛</div>
+      <div class="title-text">
+        <h1>우유 체크</h1>
+        <div class="date" id="todayDate"></div>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="settingsBtn" title="학생 명단 관리" aria-label="학생 명단 관리">✏️</button>
+      <button class="icon-btn" id="resetBtn" title="오늘 체크 초기화" aria-label="오늘 체크 초기화">🔄</button>
+    </div>
+  </div>
+
+  <div class="summary" id="summaryBar"></div>
+
+  <div class="filters" id="filterBar">
+    <button class="filter-btn active" data-filter="all">전체</button>
+    <button class="filter-btn" data-filter="wait">아직 안 가져감</button>
+    <button class="filter-btn" data-filter="taken">마시는 중</button>
+    <button class="filter-btn" data-filter="done">다 마심</button>
+  </div>
+
+  <div class="grid" id="studentGrid"></div>
+
+  <div class="empty-state" id="emptyState" style="display:none;">
+    <div class="big">🥛</div>
+    <div>아직 등록된 학생이 없어요.</div>
+    <button id="emptyAddBtn">학생 명단 추가하기</button>
+  </div>
+</div>
+
+<!-- Roster settings modal -->
+<div class="overlay" id="rosterOverlay">
+  <div class="modal">
+    <h2>✏️ 학생 명단 관리</h2>
+    <p class="hint">한 줄에 이름 한 명씩 입력하세요. 저장하면 기존 학생의 체크 현황은 그대로 유지되고, 새로 추가된 이름은 "아직 안 가져감" 상태로 시작해요. 목록에서 뺀 이름은 삭제돼요.</p>
+    <textarea id="rosterInput" placeholder="예:&#10;김민준&#10;이서연&#10;박도윤"></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" id="cancelRosterBtn">취소</button>
+      <button class="btn btn-primary" id="saveRosterBtn">저장</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const STUDENTS_KEY = 'milk_students_v1';
+  const STATUS_KEY = 'milk_status_v1';
+  const STATE_LABELS = ['아직 안 가져감', '마시는 중', '다 마셨어요!'];
+  const STATE_ICONS = ['📦', '🥛', '✅'];
+
+  const $ = (id) => document.getElementById(id);
+  const el = {
+    todayDate: $('todayDate'),
+    settingsBtn: $('settingsBtn'),
+    resetBtn: $('resetBtn'),
+    summaryBar: $('summaryBar'),
+    filterBar: $('filterBar'),
+    studentGrid: $('studentGrid'),
+    emptyState: $('emptyState'),
+    emptyAddBtn: $('emptyAddBtn'),
+    rosterOverlay: $('rosterOverlay'),
+    rosterInput: $('rosterInput'),
+    cancelRosterBtn: $('cancelRosterBtn'),
+    saveRosterBtn: $('saveRosterBtn'),
+    toast: $('toast'),
+  };
+
+  let students = [];   // [{id, name}]
+  let status = {};      // { [id]: 0|1|2 }
+  let currentFilter = 'all';
+
+  function genId(){ return 's_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2,7); }
+
+  function loadData(){
+    try{
+      const raw = localStorage.getItem(STUDENTS_KEY);
+      students = raw ? JSON.parse(raw) : [];
+    }catch(e){ students = []; }
+    try{
+      const raw = localStorage.getItem(STATUS_KEY);
+      status = raw ? JSON.parse(raw) : {};
+    }catch(e){ status = {}; }
+  }
+  function saveStudents(){
+    try{ localStorage.setItem(STUDENTS_KEY, JSON.stringify(students)); }catch(e){ showToast('저장 공간이 가득 찼어요.'); }
+  }
+  function saveStatus(){
+    try{ localStorage.setItem(STATUS_KEY, JSON.stringify(status)); }catch(e){ showToast('저장 공간이 가득 찼어요.'); }
+  }
+
+  function showToast(msg){
+    el.toast.textContent = msg;
+    el.toast.classList.add('show');
+    clearTimeout(el.toast._t);
+    el.toast._t = setTimeout(()=>el.toast.classList.remove('show'), 1500);
+  }
+
+  function formatToday(){
+    const d = new Date();
+    const days = ['일','월','화','수','목','금','토'];
+    return d.getFullYear() + '년 ' + (d.getMonth()+1) + '월 ' + d.getDate() + '일 (' + days[d.getDay()] + ')';
+  }
+
+  function render(){
+    el.todayDate.textContent = formatToday();
+
+    // summary counts
+    let waitN = 0, takenN = 0, doneN = 0;
+    students.forEach(s => {
+      const st = status[s.id] || 0;
+      if(st === 0) waitN++; else if(st === 1) takenN++; else doneN++;
+    });
+    el.summaryBar.innerHTML = '';
+    const chips = [
+      { cls: 'total', label: '전체', n: students.length },
+      { cls: 'wait', label: '미수령', n: waitN },
+      { cls: 'taken', label: '마시는 중', n: takenN },
+      { cls: 'done', label: '다 마심', n: doneN },
+    ];
+    chips.forEach(c => {
+      const div = document.createElement('div');
+      div.className = 'sum-chip ' + c.cls;
+      div.innerHTML = '<span>' + c.label + '</span><span class="n">' + c.n + '</span>';
+      el.summaryBar.appendChild(div);
+    });
+
+    // empty state
+    if(students.length === 0){
+      el.emptyState.style.display = 'block';
+      el.studentGrid.style.display = 'none';
+      el.filterBar.style.display = 'none';
+      return;
+    }
+    el.emptyState.style.display = 'none';
+    el.studentGrid.style.display = 'grid';
+    el.filterBar.style.display = 'flex';
+
+    // grid
+    el.studentGrid.innerHTML = '';
+    students.forEach(s => {
+      const st = status[s.id] || 0;
+      if(currentFilter === 'wait' && st !== 0) return;
+      if(currentFilter === 'taken' && st !== 1) return;
+      if(currentFilter === 'done' && st !== 2) return;
+
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'card state-' + st;
+      card.innerHTML =
+        '<div class="icon">' + STATE_ICONS[st] + '</div>' +
+        '<div class="name"></div>' +
+        '<div class="status-label">' + STATE_LABELS[st] + '</div>';
+      card.querySelector('.name').textContent = s.name;
+      card.addEventListener('click', () => {
+        const cur = status[s.id] || 0;
+        status[s.id] = (cur + 1) % 3;
+        saveStatus();
+        render();
+      });
+      el.studentGrid.appendChild(card);
+    });
+  }
+
+  // ---------- filters ----------
+  el.filterBar.addEventListener('click', (e) => {
+    const btn = e.target.closest('.filter-btn');
+    if(!btn) return;
+    currentFilter = btn.dataset.filter;
+    Array.from(el.filterBar.children).forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  });
+
+  // ---------- reset ----------
+  el.resetBtn.addEventListener('click', () => {
+    if(students.length === 0){ showToast('등록된 학생이 없어요.'); return; }
+    if(confirm('오늘의 우유 체크 현황을 모두 초기화할까요?\n(학생 명단은 그대로 유지돼요)')){
+      status = {};
+      saveStatus();
+      render();
+      showToast('초기화되었습니다.');
+    }
+  });
+
+  // ---------- roster modal ----------
+  function openRoster(){
+    el.rosterInput.value = students.map(s => s.name).join('\n');
+    el.rosterOverlay.classList.add('show');
+  }
+  function closeRoster(){ el.rosterOverlay.classList.remove('show'); }
+  el.settingsBtn.addEventListener('click', openRoster);
+  el.emptyAddBtn.addEventListener('click', openRoster);
+  el.cancelRosterBtn.addEventListener('click', closeRoster);
+  el.rosterOverlay.addEventListener('click', (e) => { if(e.target === el.rosterOverlay) closeRoster(); });
+
+  el.saveRosterBtn.addEventListener('click', () => {
+    const names = el.rosterInput.value.split('\n').map(n => n.trim()).filter(Boolean);
+    const existingByName = {};
+    students.forEach(s => { existingByName[s.name] = s; });
+
+    const newStudents = names.map(name => {
+      if(existingByName[name]) return existingByName[name];
+      return { id: genId(), name };
+    });
+
+    // drop status for removed students
+    const keepIds = new Set(newStudents.map(s => s.id));
+    Object.keys(status).forEach(id => { if(!keepIds.has(id)) delete status[id]; });
+
+    students = newStudents;
+    saveStudents();
+    saveStatus();
+    closeRoster();
+    render();
+    showToast('명단이 저장되었습니다.');
+  });
+
+  // ---------- init ----------
+  loadData();
+  render();
+})();
+</script>
+
+</body>
+</html>
